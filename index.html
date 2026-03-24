@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyron SMP - Minecraft Server Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1f3a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4a4f7a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6a6f9a;
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0f132e;
+            border-right: 1px solid #1e2342;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+        }
+
+        .logo {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #1e2342;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-menu {
+            padding: 1rem;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item:hover {
+            background: #1a1f42;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #ffd70020, #ff6b6b20);
+            border-left: 3px solid #ffd700;
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 1rem;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: #0f132e;
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            background: #1a1f3a;
+            border: 1px solid #2a2f4a;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6a6f9a;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-light.online {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: #0f132e;
+            border-radius: 15px;
+            padding: 1.2rem;
+            border: 1px solid #1e2342;
+        }
+
+        .stat-card h4 {
+            color: #6a6f9a;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* Console */
+        .console-container {
+            background: #0a0e1a;
+            border-radius: 15px;
+            border: 1px solid #1e2342;
+            margin-bottom: 1.5rem;
+        }
+
+        .console-header {
+            padding: 1rem;
+            border-bottom: 1px solid #1e2342;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .console {
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            background: #0a0e1a;
+        }
+
+        .console-line {
+            padding: 0.3rem 0;
+            border-bottom: 1px solid #1a1f3a;
+            color: #a0a5c0;
+        }
+
+        .console-line.info {
+            color: #4ecdc4;
+        }
+
+        .console-line.success {
+            color: #00ff00;
+        }
+
+        .console-line.warning {
+            color: #ffd700;
+        }
+
+        .console-line.error {
+            color: #ff6b6b;
+        }
+
+        .console-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #1e2342;
+            gap: 0.5rem;
+        }
+
+        .console-input input {
+            flex: 1;
+            padding: 0.8rem;
+            background: #1a1f3a;
+            border: 1px solid #2a2f4a;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .console-input button {
+            padding: 0.8rem 1.5rem;
+            background: #ffd700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .console-input button:hover {
+            background: #ffed4e;
+            transform: scale(1.02);
+        }
+
+        /* Control Buttons */
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn.start {
+            background: #00aa00;
+            color: white;
+        }
+
+        .control-btn.stop {
+            background: #aa3300;
+            color: white;
+        }
+
+        .control-btn.restart {
+            background: #ffaa00;
+            color: #1a1f3a;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Players Grid */
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .player-card {
+            background: #0f132e;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #1e2342;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #1a1f3a;
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        /* Plugins Grid */
+        .plugins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .plugin-card {
+            background: #0f132e;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid #1e2342;
+            transition: all 0.3s;
+        }
+
+        .plugin-card:hover {
+            transform: translateY(-3px);
+            border-color: #ffd700;
+        }
+
+        .plugin-name {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #1e2342;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #1a1f3a;
+            color: #ffd700;
+            border-bottom: 2px solid #ffd700;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-bar {
+                flex-direction: column;
+            }
+            .search-bar {
+                max-width: 100%;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6a6f9a;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="logo">
+                <h2>⚡ Kyron SMP</h2>
+                <p style="font-size: 0.8rem; color: #6a6f9a;">Server Panel</p>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-tab="dashboard">
+                    <span>📊</span> Dashboard
+                </div>
+                <div class="nav-item" data-tab="console">
+                    <span>💻</span> Console
+                </div>
+                <div class="nav-item" data-tab="players">
+                    <span>👥</span> Players
+                </div>
+                <div class="nav-item" data-tab="plugins">
+                    <span>🔧</span> Plugins
+                </div>
+                <div class="nav-item" data-tab="files">
+                    <span>📁</span> Files
+                </div>
+                <div class="nav-item" data-tab="settings">
+                    <span>⚙️</span> Settings
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search plugins, players, commands...">
+                </div>
+                <div class="server-status">
+                    <div class="status-indicator">
+                        <div class="status-light online"></div>
+                        <span>Server Online</span>
+                    </div>
+                    <span>|</span>
+                    <span>🕐 Uptime: 2d 14h 23m</span>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>📊 CPU USAGE</h4>
+                    <div class="value">23%</div>
+                </div>
+                <div class="stat-card">
+                    <h4>💾 RAM USAGE</h4>
+                    <div class="value">4.2 / 20 GB</div>
+                </div>
+                <div class="stat-card">
+                    <h4>👥 PLAYERS ONLINE</h4>
+                    <div class="value" id="playerCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>📦 VERSION</h4>
+                    <div class="value">1.21.11</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="control-buttons">
+                    <button class="control-btn start" onclick="sendCommand('start')">▶️ START SERVER</button>
+                    <button class="control-btn stop" onclick="sendCommand('stop')">⏹️ STOP SERVER</button>
+                    <button class="control-btn restart" onclick="sendCommand('restart')">🔄 RESTART SERVER</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>🎮 SERVER IP</h4>
+                        <div class="value" style="font-size: 1rem;">play.kyronsmp.com</div>
+                        <button onclick="copyIP()" style="margin-top: 0.5rem; padding: 0.3rem 1rem;">Copy IP</button>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🌐 DISK USAGE</h4>
+                        <div class="value">12.3 / 50 GB</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>📅 LAST BACKUP</h4>
+                        <div class="value">2 hours ago</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🎯 TPS</h4>
+                        <div class="value">20.0</div>
+                    </div>
+                </div>
+
+                <div class="console-container">
+                    <div class="console-header">
+                        <span>📋 Recent Activity</span>
+                        <span style="font-size: 0.8rem; color: #6a6f9a;">Last 10 lines</span>
+                    </div>
+                    <div class="console" id="recentConsole">
+                        <div class="console-line info">[12:34:56] Server started successfully</div>
+                        <div class="console-line success">[12:35:23] Player Kyron joined the game</div>
+                        <div class="console-line info">[12:36:45] Memory usage: 4.2/20 GB</div>
+                        <div class="console-line warning">[12:40:12] Low TPS warning: 19.8</div>
+                        <div class="console-line success">[12:45:33] Backup completed successfully</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Tab -->
+            <div id="console" class="tab-content">
+                <div class="console-container">
+                    <div class="console-header">
+                        <span>💻 Server Console</span>
+                        <button onclick="clearConsole()" style="background: none; border: 1px solid #ffd700; padding: 0.3rem 1rem; border-radius: 5px; cursor: pointer;">Clear</button>
+                    </div>
+                    <div class="console" id="fullConsole">
+                        <div class="console-line info">[12:34:56] Loading server properties...</div>
+                        <div class="console-line info">[12:34:57] Starting Minecraft server on *:25565</div>
+                        <div class="console-line success">[12:34:58] Server started successfully!</div>
+                        <div class="console-line info">[12:35:23] Player Kyron joined the game</div>
+                        <div class="console-line info">[12:36:12] Player Steve joined the game</div>
+                        <div class="console-line info">[12:37:45] Player Alex joined the game</div>
+                        <div class="console-line success">[12:40:00] 3 players online</div>
+                    </div>
+                    <div class="console-input">
+                        <input type="text" id="commandInput" placeholder="Type a command... (e.g., say Hello, list, op PlayerName)" onkeypress="handleCommandKeypress(event)">
+                        <button onclick="sendConsoleCommand()">Send Command</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Players Tab -->
+            <div id="players" class="tab-content">
+                <div class="control-buttons">
+                    <input type="text" id="playerSearch" placeholder="Search players..." style="background: #1a1f3a; border: 1px solid #2a2f4a; padding: 0.8rem; border-radius: 25px; color: white; flex: 1;">
+                </div>
+                <div class="players-grid" id="playersGrid">
+                    <div class="player-card">
+                        <div class="player-avatar">🎮</div>
+                        <div class="player-name">Kyron</div>
+                        <div style="font-size: 0.8rem; color: #ffd700;">Admin</div>
+                    </div>
+                    <div class="player-card">
+                        <div class="player-avatar">⚔️</div>
+                        <div class="player-name">Steve</div>
+                        <div style="font-size: 0.8rem;">Player</div>
+                    </div>
+                    <div class="player-card">
+                        <div class="player-avatar">🏹</div>
+                        <div class="player-name">Alex</div>
+                        <div style="font-size: 0.8rem;">Player</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plugins Tab -->
+            <div id="plugins" class="tab-content">
+                <div class="plugins-grid" id="pluginsGrid">
+                    <div class="plugin-card">
+                        <div class="plugin-name">EssentialsX</div>
+                        <div style="font-size: 0.8rem;">Core commands and features</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                    <div class="plugin-card">
+                        <div class="plugin-name">LuckPerms</div>
+                        <div style="font-size: 0.8rem;">Permissions management</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                    <div class="plugin-card">
+                        <div class="plugin-name">WorldGuard</div>
+                        <div style="font-size: 0.8rem;">Region protection</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                    <div class="plugin-card">
+                        <div class="plugin-name">McMMO</div>
+                        <div style="font-size: 0.8rem;">RPG skills</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                    <div class="plugin-card">
+                        <div class="plugin-name">ShopGUI+</div>
+                        <div style="font-size: 0.8rem;">Economy shop</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                    <div class="plugin-card">
+                        <div class="plugin-name">GriefPrevention</div>
+                        <div style="font-size: 0.8rem;">Anti-grief protection</div>
+                        <div style="font-size: 0.7rem; color: #00ff00;">✅ Enabled</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Tab -->
+            <div id="files" class="tab-content">
+                <div class="console-container">
+                    <div class="console-header">
+                        <span>📁 File Manager</span>
+                        <button onclick="refreshFiles()" style="background: none; border: 1px solid #ffd700; padding: 0.3rem 1rem; border-radius: 5px;">Refresh</button>
+                    </div>
+                    <div class="console" style="height: 400px;">
+                        <div class="console-line">📁 /home/minecraft/server/</div>
+                        <div class="console-line">  📄 server.jar (45.2 MB)</div>
+                        <div class="console-line">  📄 server.properties (2.3 KB)</div>
+                        <div class="console-line">  📄 eula.txt (0.1 KB)</div>
+                        <div class="console-line">  📁 plugins/</div>
+                        <div class="console-line">  📁 worlds/</div>
+                        <div class="console-line">  📁 logs/</div>
+                        <div class="console-line">  📄 banned-players.json</div>
+                        <div class="console-line">  📄 ops.json</div>
+                        <div class="console-line">  📄 whitelist.json</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>⚙️ Server Settings</h4>
+                        <label>Server Name:</label>
+                        <input type="text" value="Kyron SMP" style="width: 100%; background: #1a1f3a; border: 1px solid #2a2f4a; padding: 0.5rem; margin: 0.5rem 0; border-radius: 5px; color: white;">
+                        <label>Max Players:</label>
+                        <input type="number" value="250" style="width: 100%; background: #1a1f3a; border: 1px solid #2a2f4a; padding: 0.5rem; margin: 0.5rem 0; border-radius: 5px; color: white;">
+                        <label>Gamemode:</label>
+                        <select style="width: 100%; background: #1a1f3a; border: 1px solid #2a2f4a; padding: 0.5rem; margin: 0.5rem 0; border-radius: 5px; color: white;">
+                            <option>Survival</option>
+                            <option>Creative</option>
+                            <option>Adventure</option>
+                        </select>
+                        <button style="margin-top: 1rem; background: #ffd700; padding: 0.5rem; border: none; border-radius: 5px;">Save Settings</button>
+                    </div>
+                    <div class="stat-card">
+                        <h4>🔄 Backup & Restore</h4>
+                        <button style="margin: 0.5rem 0; background: #4a4f7a; padding: 0.5rem; border: none; border-radius: 5px;">Create Backup</button>
+                        <button style="margin: 0.5rem 0; background: #aa3300; padding: 0.5rem; border: none; border-radius: 5px;">Restore Backup</button>
+                        <div style="margin-top: 1rem; font-size: 0.8rem;">Last backup: 2 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const tabId = item.dataset.tab;
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            // Search in plugins
+            const plugins = document.querySelectorAll('.plugin-card');
+            plugins.forEach(plugin => {
+                const name = plugin.querySelector('.plugin-name')?.textContent.toLowerCase() || '';
+                const desc = plugin.querySelector('div')?.textContent.toLowerCase() || '';
+                if (name.includes(searchTerm) || desc.includes(searchTerm)) {
+                    plugin.style.display = 'block';
+                } else {
+                    plugin.style.display = 'none';
+                }
+            });
+            
+            // Search in players
+            const players = document.querySelectorAll('.player-card');
+            players.forEach(player => {
+                const name = player.querySelector('.player-name')?.textContent.toLowerCase() || '';
+                if (name.includes(searchTerm)) {
+                    player.style.display = 'block';
+                } else {
+                    player.style.display = 'none';
+                }
+            });
+        });
+
+        // Console functions
+        function addConsoleMessage(message, type = 'info') {
+            const console = document.getElementById('fullConsole');
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = `[${time}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+            
+            // Also add to recent console if on dashboard
+            const recentConsole = document.getElementById('recentConsole');
+            if (recentConsole) {
+                const recentLine = document.createElement('div');
+                recentLine.className = `console-line ${type}`;
+                recentLine.textContent = `[${time}] ${message}`;
+                recentConsole.appendChild(recentLine);
+                if (recentConsole.children.length > 10) {
+                    recentConsole.removeChild(recentConsole.children[0]);
+                }
+                recentConsole.scrollTop = recentConsole.scrollHeight;
+            }
+        }
+
+        function sendConsoleCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            if (command) {
+                addConsoleMessage(`> ${command}`, 'info');
+                addConsoleMessage(`Command executed: ${command}`, 'success');
+                input.value = '';
+            }
+        }
+
+        function handleCommandKeypress(event) {
+            if (event.key === 'Enter') {
+                sendConsoleCommand();
+            }
+        }
+
+        function clearConsole() {
+            const console = document.getElementById('fullConsole');
+            console.innerHTML = '';
+            addConsoleMessage('Console cleared', 'warning');
+        }
+
+        function sendCommand(cmd) {
+            addConsoleMessage(`> Executing: ${cmd}`, 'info');
+            if (cmd === 'start') {
+                addConsoleMessage('Starting server...', 'info');
+                setTimeout(() => {
+                    addConsoleMessage('Server started successfully!', 'success');
+                    document.querySelector('.status-light').classList.add('online');
+                }, 2000);
+            } else if (cmd === 'stop') {
+                addConsoleMessage('Stopping server...', 'warning');
+                setTimeout(() => {
+                    addConsoleMessage('Server stopped', 'warning');
+                }, 1000);
+            } else if (cmd === 'restart') {
+                addConsoleMessage('Restarting server...', 'warning');
+                setTimeout(() => {
+                    addConsoleMessage('Server restarted successfully!', 'success');
+                }, 3000);
+            }
+        }
+
+        function copyIP() {
+            const ip = 'play.kyronsmp.com';
+            navigator.clipboard.writeText(ip);
+            addConsoleMessage(`IP copied: ${ip}`, 'success');
+        }
+
+        function refreshFiles() {
+            addConsoleMessage('Refreshing file list...', 'info');
+            setTimeout(() => {
+                addConsoleMessage('File list refreshed', 'success');
+            }, 500);
+        }
+
+        // Player search
+        const playerSearch = document.getElementById('playerSearch');
+        if (playerSearch) {
+            playerSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const players = document.querySelectorAll('.player-card');
+                players.forEach(player => {
+                    const name = player.querySelector('.player-name')?.textContent.toLowerCase() || '';
+                    if (name.includes(term)) {
+                        player.style.display = 'block';
+                    } else {
+                        player.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Update player count
+        let playerCount = 3;
+        setInterval(() => {
+            playerCount = Math.floor(Math.random() * 250) + 1;
+            document.getElementById('playerCount').textContent = playerCount;
+        }, 30000);
+
+        // Simulate random console messages
+        setInterval(() => {
+            const messages = [
+                'Player joined the game',
+                'Memory usage: 4.2/20 GB',
+                'TPS: 20.0',
+                'Backup completed',
+                'Player left the game'
+            ];
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            addConsoleMessage(randomMsg, 'info');
+        }, 45000);
+    </script>
+</body>
+</html>
